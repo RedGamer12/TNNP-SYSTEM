@@ -16,7 +16,10 @@ function SharedModule._unload()
     SharedModule.threads = {}
     SharedModule.callbacks = {}
     SharedModule.runningThreads = {}
-    Fluent:Destroy()
+    if _G.Library then
+        _G.Library:Destroy()
+        _G.Library = nil
+    end
 end
 
 function SharedModule.toggleThread(threadInfo, enable)
