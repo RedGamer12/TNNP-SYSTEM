@@ -1,7 +1,7 @@
 local SharedModule = {}
 
 SharedModule.__urlcache = SharedModule.__urlcache or {}
-SharedModule.threads = {}
+SharedModule.threads = SharedModule.threads or {}
 SharedModule.callbacks = {}
 
 if SharedModule._unload then
@@ -9,18 +9,24 @@ if SharedModule._unload then
 end
 
 function SharedModule._unload()
-    for i = 1, #SharedModule.threads do
-        coroutine.close(SharedModule.threads[i])
+    for _, thread in ipairs(SharedModule.threads) do
+        if coroutine.status(thread) ~= "dead" then
+            coroutine.close(thread)
+        end
     end
+    SharedModule.threads = {}
 
     Fluent:Destroy()
 
-    for i = 1, #SharedModule.callbacks do
-        task.spawn(SharedModule.callbacks[i])
+    for _, callback in ipairs(SharedModule.callbacks) do
+        task.spawn(callback)
     end
+    SharedModule.callbacks = {}
 end
 
 function SharedModule.init(threads)
+    SharedModule._unload()
+    
     for _, threadInfo in ipairs(threads) do
         local thread = task.spawn(function()
             print("Thread started:", threadInfo.name)
@@ -30,6 +36,7 @@ function SharedModule.init(threads)
             end
         end)
 
+        table.insert(SharedModule.threads, thread)
         table.insert(SharedModule.callbacks, function()
             print("Canceling thread:", threadInfo.name)
             pcall(task.cancel, thread)
