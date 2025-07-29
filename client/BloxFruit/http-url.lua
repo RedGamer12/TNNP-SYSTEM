@@ -1,1 +1,1 @@
-return "https://catapi-3u8c.onrender.com"
+return {30,"https://catapi-3u8c.onrender.com"}
